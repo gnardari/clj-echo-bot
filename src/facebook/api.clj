@@ -1,6 +1,7 @@
 (ns facebook.api
   (:gen-class)
   (:require
+      [handler.event :refer :all]
       [org.httpkit.client :as http]
       [clojure.pprint :as pprint]
       [clojure.data.json :as json]))
@@ -30,21 +31,13 @@
     (println messageData)
     (sendAPI messageData))
 
-(defn onMessage [event]
-  (def senderID (get-in event [:sender :id]))
-  (def recipientID (get-in event [:recipient :id]))
-  (def timeOfMessage (get-in event [:timestamp]))
-  (def message (get-in event [:message]))
-  (println (str "Received message for user " senderID " and page "
-              recipientID " at " timeOfMessage " with message:"))
-  (println message)
-  (sendTextMessage [senderID (:text message)]))
-
 (defn route-request [request]
   (def data (get-in request [:body]))
   (if (= (:object data) "page")
     (doseq [pageEntry (:entry data)]
         (doseq [messagingEvent (:messaging pageEntry)]
             (cond
-                (contains? messagingEvent :message) (onMessage messagingEvent)
-                :else (println (str "Webhook received unknown messagingEvent: " messagingEvent)))))))
+                (contains? messagingEvent :message) (sendTextMessage
+                                                     (onMessage messagingEvent))
+                :else (println
+                        (str "Webhook received unknown messagingEvent: " messagingEvent)))))))

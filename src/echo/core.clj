@@ -7,6 +7,7 @@
             [ring.util.response :refer [response]]
             [facebook.api :as fb]))
 
+
 (defroutes bot-routes
   (POST "/webhook" request
         (fb/route-request request)
